@@ -73,5 +73,5 @@ Submission is only the following three things:
 
 - [x] A 10-second video of gameplay **before** your changes, showing the bug/broken behavior
 - [x] A 10-second video of gameplay **after** your changes, showing the bug fixed and the new features working
-- [] The Chat/LLM used page link, with the complete chat history
+- [x] The Chat/LLM used page link, with the complete chat history: https://claude.ai/share/b03528b9-a1a0-44e1-8285-c7da42aa0325
 

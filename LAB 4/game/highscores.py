@@ -2,44 +2,36 @@ import json
 import os
 from datetime import date
 
-# Top-5 high score table persisted across sessions (Task 3).
-MAX_ENTRIES = 5
-DEFAULT_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "highscores.json")
+MAX_SCORES=5
+SCORES_PATH=os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),"highscores.json")
 
+def load_scores(path=SCORES_PATH):
+    """Return the saved top scores (highest first). Missing or corrupt file -> empty list."""
+    try:
+        with open(path) as f:
+            data=json.load(f)
+    except (OSError,ValueError):
+        return []
+    scores=[]
+    for entry in data if isinstance(data,list) else []:
+        if isinstance(entry,dict) and isinstance(entry.get("score"),int):
+            scores.append({"score":entry["score"],"date":str(entry.get("date",""))})
+    scores.sort(key=lambda e:e["score"],reverse=True)
+    return scores[:MAX_SCORES]
 
-class HighScores:
-    def __init__(self, path=DEFAULT_PATH):
-        self.path = path
-        self.entries = self._load()
-
-    def _load(self):
-        try:
-            with open(self.path, "r", encoding="utf-8") as f:
-                data = json.load(f)
-        except (FileNotFoundError, json.JSONDecodeError, OSError):
-            return []
-        # Keep only well-formed entries in case the file was edited by hand.
-        valid = [e for e in data if isinstance(e, dict) and isinstance(e.get("score"), int)]
-        return sorted(valid, key=lambda e: e["score"], reverse=True)[:MAX_ENTRIES]
-
-    def _save(self):
-        try:
-            with open(self.path, "w", encoding="utf-8") as f:
-                json.dump(self.entries, f, indent=2)
-        except OSError:
-            pass  # A read-only folder shouldn't crash the game.
-
-    def best(self):
-        return self.entries[0]["score"] if self.entries else 0
-
-    def submit(self, score):
-        """Add a score; returns its rank index (0-4) if it made the table, else None."""
-        entry = {"score": score, "date": date.today().isoformat()}
-        self.entries.append(entry)
-        self.entries.sort(key=lambda e: e["score"], reverse=True)
-        self.entries = self.entries[:MAX_ENTRIES]
-        self._save()
-        for i, e in enumerate(self.entries):
-            if e is entry:
-                return i
-        return None
+def add_score(score, path=SCORES_PATH):
+    """Insert a score, keep the top 5, save. Returns (scores, rank) where rank is the
+    0-based position of the new score in the table, or None if it didn't make it."""
+    new={"score":int(score),"date":date.today().isoformat()}
+    scores=load_scores(path)+[new]
+    scores.sort(key=lambda e:e["score"],reverse=True)  # stable: older ties stay ahead
+    scores=scores[:MAX_SCORES]
+    rank=next((i for i,e in enumerate(scores) if e is new),None)
+    tmp=path+".tmp"
+    try:
+        with open(tmp,"w") as f:
+            json.dump(scores,f,indent=2)
+        os.replace(tmp,path)
+    except OSError:
+        pass  # can't save (read-only dir etc.) -> still show the table for this session
+    return scores,rank

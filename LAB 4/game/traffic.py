@@ -23,6 +23,10 @@ class Car:
         for wx in [self.rect.x+6,self.rect.right-16]:
             for wy in [self.rect.y+4,self.rect.bottom-16]:
                 pygame.draw.rect(screen,(30,30,30),pygame.Rect(wx,wy,10,12),border_radius=3)
+        # headlights on the front of the car (front = direction of travel)
+        fy=self.rect.bottom-6 if self.direction==1 else self.rect.top
+        for hx in [self.rect.x+14,self.rect.right-24]:
+            pygame.draw.rect(screen,(255,240,170),pygame.Rect(hx,fy,10,6),border_radius=2)
 
 def make_car(lane_idx,height,speed):
     x=lane_idx*LANE_W
